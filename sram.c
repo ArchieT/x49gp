@@ -623,34 +623,20 @@ sram_load(x49gp_module_t *module, GKeyFile *key)
 
 	sram->size = 0x00080000;
 
-	sram->data = mmap(phys_ram_base + sram->offset, sram->size,
-			  PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED,
-			  sram->fd, 0);
-	if (sram->data == (void *) -1) {
-		error = -errno;
-		fprintf(stderr, "%s: %s:%u: mmap %s: %s\n",
+    sram->data = phys_ram_base + sram->offset;
+		fprintf(stderr, "%s: %s:%u: reading sram data at %p, size %p\n",
 			module->name, __FUNCTION__, __LINE__,
-			filename, strerror(errno));
-		g_free(filename);
-		close(sram->fd);
-		sram->fd = -1;
-		return error;
-	}
+			sram->data, sram->size);
+    read(sram->fd, sram->data, sram->size);
+	//TODO: Error handling
 
-	sram->shadow = mmap(phys_ram_base + sram->offset + sram->size,
-			    sram->size,
-			    PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED,
-			    sram->fd, 0);
-	if (sram->shadow == (void *) -1) {
-		error = -errno;
-		fprintf(stderr, "%s: %s:%u: mmap %s (shadow): %s\n",
+    sram->shadow = phys_ram_base + sram->offset + sram->size;
+    lseek(sram->fd, 0, SEEK_SET);
+		fprintf(stderr, "%s: %s:%u: reading sram shadow at %p, size %p\n",
 			module->name, __FUNCTION__, __LINE__,
-			filename, strerror(errno));
-		g_free(filename);
-		close(sram->fd);
-		sram->fd = -1;
-		return error;
-	}
+			sram->shadow, sram->size);
+    read(sram->fd, sram->shadow, sram->size);
+	//TODO: Error handling
 
 	sram->x49gp->sram = phys_ram_base + sram->offset;
 
@@ -668,8 +654,9 @@ sram_save(x49gp_module_t *module, GKeyFile *key)
 	printf("%s: %s:%u\n", module->name, __FUNCTION__, __LINE__);
 #endif
 
-	error = msync(sram->data, sram->size, MS_ASYNC);
-	if (error) {
+	lseek(sram->fd, 0, SEEK_SET);
+	error = write(sram->fd, sram->data, sram->size);
+	if (error == -1) {
 		fprintf(stderr, "%s:%u: msync: %s\n",
 			__FUNCTION__, __LINE__, strerror(errno));
 		return error;

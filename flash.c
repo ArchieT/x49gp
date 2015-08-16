@@ -478,20 +478,14 @@ flash_load(x49gp_module_t *module, GKeyFile *key)
 		g_free(filename);
 		return -1;
 	}
-
-	flash->data = mmap(phys_ram_base + flash->offset, SST29VF160_SIZE,
-			   PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED,
-			   flash->fd, 0);
-	if (flash->data == (void *) -1) {
-		fprintf(stderr, "%s: %s:%u: mmap %s: %s\n",
-			module->name, __FUNCTION__, __LINE__,
-			filename, strerror(errno));
-		g_free(filename);
-		close(flash->fd);
-		flash->fd = -1;
-		return -1;
-	}
+    
 	flash->size = SST29VF160_SIZE;
+    flash->data = phys_ram_base + flash->offset;
+			fprintf(stderr, "%s: %s:%u: reading flash data at %p, size %p\n",
+			module->name, __FUNCTION__, __LINE__,
+			flash->data, flash->size);
+    read(flash->fd, flash->data, flash->size);
+	//TODO: Error handling
 
 	g_free(filename);
 	return 0;
@@ -507,8 +501,9 @@ flash_save(x49gp_module_t *module, GKeyFile *config)
 	printf("%s: %s:%u\n", module->name, __FUNCTION__, __LINE__);
 #endif
 
-	error = msync(flash->data, flash->size, MS_ASYNC);
-	if (error) {
+	lseek(flash->fd, 0, SEEK_SET);
+	error = write(flash->fd, flash->data, flash->size);
+	if (error == -1) {
 		fprintf(stderr, "%s:%u: msync: %s\n",
 			__FUNCTION__, __LINE__, strerror(errno));
 		return error;
