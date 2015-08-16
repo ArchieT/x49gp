@@ -169,10 +169,10 @@ endif
 
 ifdef QEMU_OLD
 $(TARGET): $(OBJS) $(VVFATOBJS) $(QEMU)/arm-softmmu/libqemu.a
-	$(CC) -Wl,--no-as-needed $(LDFLAGS) -o $@ $(OBJS) $(VVFATOBJS) $(LDLIBS)
+	$(CC) -Wl,--no-as-needed -o $@ $(OBJS) $(VVFATOBJS) $(LDLIBS) $(LDFLAGS)
 else
 $(TARGET): $(OBJS) $(VVFATOBJS) $(X49GP_LIBS)
-	$(CC) -Wl,--no-as-needed $(LDFLAGS) -o $@ $(OBJS) $(VVFATOBJS) $(LDLIBS)
+	$(CC) -Wl,--no-as-needed -o $@ $(OBJS) $(VVFATOBJS) $(LDLIBS) $(LDFLAGS)
 endif
 
 flash-49g+: $(BOOT49GP) flash-noboot
