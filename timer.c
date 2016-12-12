@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/syscall.h>
 #include <limits.h>
 #include <time.h>
 #include <sys/time.h>

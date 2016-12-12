@@ -30,14 +30,14 @@ x49gp_modules_init(x49gp_t *x49gp)
 		}
 	}
 
-	phys_ram_base = mmap(0, phys_ram_size, PROT_NONE, MAP_SHARED | MAP_ANON, -1, 0);
+	phys_ram_base = malloc(phys_ram_size);
 	if (phys_ram_base == (uint8_t *) -1) {
 		fprintf(stderr, "%s: can't mmap %08x anonymous bytes\n",
 			__FUNCTION__, phys_ram_size);
 		exit(1);
 	}
 
-printf("%s: phys_ram_base: %p\n", __FUNCTION__, phys_ram_base);
+printf("%s: phys_ram_base: %p (%p bytes mmaped)\n", __FUNCTION__, phys_ram_base, phys_ram_size);
 
 	phys_ram_dirty = qemu_vmalloc(phys_ram_size >> TARGET_PAGE_BITS);
 	memset(phys_ram_dirty, 0xff, phys_ram_size >> TARGET_PAGE_BITS);

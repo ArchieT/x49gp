@@ -48,20 +48,14 @@ s3c2410_sram_load(x49gp_module_t *module, GKeyFile *key)
 		return error;
 	}
 
-	filemap->data = mmap(phys_ram_base + filemap->offset, S3C2410_SRAM_SIZE,
-			     PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED,
-			     filemap->fd, 0);
-	if (filemap->data == (void *) -1) {
-		error = -errno;
-		fprintf(stderr, "%s: %s:%u: mmap %s: %s\n",
-			module->name, __FUNCTION__, __LINE__,
-			filename, strerror(errno));
-		g_free(filename);
-		close(filemap->fd);
-		filemap->fd = -1;
-		return error;
-	}
 	filemap->size = S3C2410_SRAM_SIZE;
+
+    filemap->data = phys_ram_base + filemap->offset;
+		fprintf(stderr, "%s: %s:%u: reading filemap data at %p, size %p\n",
+			module->name, __FUNCTION__, __LINE__,
+			filemap->data, filemap->size);
+    read(filemap->fd, filemap->data, filemap->size);
+	//TODO: Error handling
 
 	g_free(filename);
 
@@ -79,8 +73,9 @@ s3c2410_sram_save(x49gp_module_t *module, GKeyFile *key)
 	printf("%s: %s:%u\n", module->name, __FUNCTION__, __LINE__);
 #endif
 
-	error = msync(filemap->data, filemap->size, MS_ASYNC);
-	if (error) {
+	lseek(filemap->fd, 0, SEEK_SET);
+	error = write(filemap->fd, filemap->data, filemap->size);
+	if (error == -1) {
 		fprintf(stderr, "%s:%u: msync: %s\n",
 			__FUNCTION__, __LINE__, strerror(errno));
 		return error;
